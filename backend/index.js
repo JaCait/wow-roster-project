@@ -40,6 +40,19 @@ app.post("/api/players", async (req, res) => {
     }
 });
 
+app.delete("/api/players/:id", async (req, res) => {
+    const playerId = req.params.id;
+    try { 
+        const result = await pgClient.query('DELETE FROM players WHERE id = $1 RETURNING *', [playerId]);
+        if(result.rowCount === 0) {
+            return res.status(404).json({ message: "Player not found" });
+        }
+    } catch (err) {
+        console.log('Error: ', err);
+        res.status(500).send('Problemy');
+    }
+});
+
 app.listen(port, () => { 
     console.log(`Server running on ${port}`)
 });

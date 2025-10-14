@@ -14,7 +14,9 @@ export async function addPlayer(playerData) {
     return res.json();
 }
 
-export async function deletePlayer(id) {
-    const res = await fetch(`${API_URL}/${id}`, { method: "DELETE" });
+export async function deletePlayer(uid) {
+    const res = await fetch(`${API_URL}/${uid}`, { 
+        method: "DELETE",
+    });
     return res.json();
 }

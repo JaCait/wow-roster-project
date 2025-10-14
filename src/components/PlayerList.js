@@ -18,6 +18,7 @@ export default function PlayerList() {
         playerClass: "",
         playerSpec: "",
     });
+    const [deleteId, setDeleteId] = useState("");
 
     const classSpecs = {
         "Death Knight": ["Blood", "Frost", "Unholy"],
@@ -59,8 +60,17 @@ export default function PlayerList() {
         }));
     }
 
-    const handleSubmit = async (e) => {
-        e.preventDefault(); // zapobiega przeładowaniu strony
+    const handleClassChange = (e) => {
+        const selectedClass = e.target.value;
+        setPlayerData((prevPlayerData) => ({
+            ...prevPlayerData,
+            playerClass: selectedClass,
+            playerSpec: selectedClass ? classSpecs[selectedClass][0] : "",
+        }));
+    }
+
+    const handleAddSubmit = async (e) => {
+        e.preventDefault();
 
         try {
             const newPlayer = await addPlayer(playerData);
@@ -76,24 +86,38 @@ export default function PlayerList() {
         }
     };
 
+    const handleDeleteSubmit = async (e) => {
+        e.preventDefault();
+
+        if(!deleteId) return;
+        try {
+            const deletedPlayer = await deletePlayer(deleteId);
+            setPlayers(prev => prev.filter(player => player.id !== deleteId))
+            setDeleteId("");
+        } catch (err) {
+            console.log('Error: ' + err);
+        }
+    };
+
     return(
         <div>
             <h2 className="text-lg font-semibold mb-2">Players</h2>
             <ul>
                 {players.map((player) => (
-                    <li key={player.id}>
+                    <li key={player.id} name={player.id}>
                         {player.name} - {player.server} - {player.class} - {player.spec}
                     </li>
                 ))}
             </ul>
 
-            <form onSubmit={handleSubmit} className='flex flex-col gap-2 w-64'>
+            <form onSubmit={handleAddSubmit} className='flex flex-col gap-2 w-64'>
                 <label> Name:
                     <input 
                         type="text"
                         name="playerName"
                         value={playerData.playerName}
                         onChange={handleInputChange}
+                        required
                     />
                 </label>
                 <label> Server:
@@ -102,6 +126,7 @@ export default function PlayerList() {
                         name="playerServer"
                         value={playerData.playerServer}
                         onChange={handleInputChange}
+                        required
                     />
                 </label>
                 <label> Class:
@@ -109,7 +134,8 @@ export default function PlayerList() {
                         style={{color: classColors[playerData.playerClass] || "#ffffff"}}
                         name="playerClass" 
                         value={playerData.playerClass} 
-                        onChange={handleInputChange}
+                        onChange={handleClassChange}
+                        required
                     >
                         <option value="" hidden>Class</option>
                         {Object.keys(classSpecs).map((cls) => (
@@ -117,23 +143,35 @@ export default function PlayerList() {
                         ))}
                     </select>
                 </label>
-                <label> Spec:
-                    <select
-                        style={{color: classColors[playerData.playerClass] || "#ffffff"}}
-                        name="playerSpec"
-                        value={playerData.playerSpec}
-                        onChange={handleInputChange}
-                        isDisabled={!playerData.playerClass}
-                    >
-                        <option value="" hidden>Spec</option>
-                        {playerData.playerClass && 
-                        classSpecs[playerData.playerClass].map((spec) => (
-                            <option key={spec} value={spec} >{spec}</option>
-                        ))
-                        }
-                    </select>
-                </label>
+                {playerData.playerClass &&
+                    <label> Spec:
+                        <select
+                            style={{color: classColors[playerData.playerClass] || "#ffffff"}}
+                            name="playerSpec"
+                            value={playerData.playerSpec}
+                            onChange={handleInputChange}
+                            isDisabled={!playerData.playerClass}
+                        >
+                            {playerData.playerClass && 
+                            classSpecs[playerData.playerClass].map((spec) => (
+                                <option key={spec} value={spec} >{spec}</option>
+                            ))
+                            }
+                        </select>
+                    </label>
+                }
+                
                 <button type="submit">Add</button>
+            </form>
+            <form onSubmit={handleDeleteSubmit}>
+                <label> id:
+                    <input
+                        type="text"
+                        name="playerId"
+                        onChange={(e) => setDeleteId(e.target.value)}
+                    />
+                </label>
+                <button type="submit">Delete</button>
             </form>
         </div>
     );
